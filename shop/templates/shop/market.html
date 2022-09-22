@@ -1,0 +1,23 @@
+{%extends 'base.html'%}
+{% load static %}
+{% block title %} Swapbox &mdash; Freelance market place{% endblock %}
+{%block meta%}
+<meta name="description" content="Buy and sell online writing accounts in the most secure way">
+<meta name="keywords" content="Buy and sell online writing accounts in the most secure way">
+{% endblock %}
+
+{%block content%}
+<!-- Wrapper -->
+<div id="wrapper">
+    <div>
+        <div>        
+            {% for account in accounts %}
+            <p>{{account.title}}</p>
+            <a href="{{ account.get_absolute_url }}">
+                View account
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{%endblock%}
