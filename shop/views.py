@@ -10,7 +10,7 @@ from .models import Cart,Wishlist
 
 # article list page
 def market(request):
-    accounts = Account.objects.all()
+    accounts = Account.objects.filter(status='OS')
     tags = Tag.objects.all()
     images = Image.objects.all()
 
