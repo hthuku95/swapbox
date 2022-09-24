@@ -2,6 +2,9 @@ from django.shortcuts import render,redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user
 from accounts.models import Tag,Image,Account
+from profiles.models import UserProfile
+from django.contrib import messages
+from .models import Cart,Wishlist
 
 # Create your views here.
 
@@ -30,13 +33,45 @@ def account_detail_view(request,id):
     return render(request,'shop/account_details.html',context)
 
 # Add to cart
+@login_required()
 def add_to_cart(request,id):
-    # if an account has an exam, redirect to the exam page, else add the account to the user's cart
-    # Handle this with a pop-up
-    pass
+    account = Account.objects.get(id=id)
+    userprofile = UserProfile.objects.get(user=request.user)
+    cart = Cart.objects.get(user=userprofile)
+    
+    if account.has_test:
+        pass
+    else:
+        if cart.accounts.filter(account__id=account.id).exists():
+            messages.info(request,"The account is already in your Cart")
+            return redirect("shop:market")
+        elif account.status == 'IC':
+            messages.warning(request,"The account has already been auctioned off. Browse our market page for other similar accounts")
+            return redirect("shop:market")
+        else:
+            account.status == 'IC'
+            account.save()
+            cart.accounts.add(account)
+            messages.success(request, "The account was added to your cart successfully")
+            return redirect("shop:market")
 
+@login_required()
 def remove_from_cart(request,id):
     pass
 
+@login_required()
 def add_to_wishlist(request,id):
-    pass
+    account = Account.objects.get(id=id)
+    userprofile = UserProfile.objects.get(user=request.user)
+    wish_list = Wishlist.objects.get(user=userprofile)
+
+    if wish_list.accounts.filter(account__id=account.id).exists():
+        messages.info(request, "The account is already in your wishlist")
+        return redirect("shop:market")
+    elif account.status == 'IC':
+        messages.warning(request,"The account has already been auctioned off.Browse our marketplace for other similar accounts")
+        return redirect("shop:market")
+    else:
+        wish_list.accounts.add(account)
+        messages.success(request, "The account has been added to your wishlist successfully")
+        return redirect("shop:market")
