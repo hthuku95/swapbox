@@ -81,4 +81,9 @@ class Account(models.Model):
             'id':self.id
         })
 
+    def get_remove_from_wishlist_url(self):
+        return reverse("shop:remove-from-wishlist-url",kwargs={
+            'id':self.id
+        })
+
     
