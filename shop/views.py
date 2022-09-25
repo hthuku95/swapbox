@@ -51,13 +51,27 @@ def add_to_cart(request,id):
         else:
             account.status == 'IC'
             account.save()
+            # Remove the acount from other wishlists
             cart.accounts.add(account)
             messages.success(request, "The account was added to your cart successfully")
             return redirect("shop:market")
 
 @login_required()
 def remove_from_cart(request,id):
-    pass
+    account = Account.objects.get(id=id)
+    userprofile = UserProfile.objects.get(user=request.user)
+    cart = Cart.objects.get(user=userprofile)
+
+    if cart.accounts.filter(account__id=account.id).exists():
+        cart.accounts.remove(account)
+        cart.save()
+        account.status = 'OS'
+        account.save()
+        messages.success(request, "The account has been successfully removed from your cart")
+        return redirect("shop:market")
+    else:
+        messages.info(request, "The account has already been removed from your Cart")
+        return redirect("shop:market")
 
 @login_required()
 def add_to_wishlist(request,id):
@@ -74,4 +88,19 @@ def add_to_wishlist(request,id):
     else:
         wish_list.accounts.add(account)
         messages.success(request, "The account has been added to your wishlist successfully")
+        return redirect("shop:market")
+
+@login_required()
+def remove_from_wishlist(request,id):
+    account = Account.objects.get(id=id)
+    userprofile = UserProfile.objects.get(user=request.user)
+    wish_list = Wishlist.objects.get(user=userprofile)
+
+    if wish_list.accounts.filter(account__id=account.id).exists():
+        wish_list.accounts.remove(account)
+        wish_list.save()
+        messages.success(request, "The account was successfully removed from your Wishlist ")
+        return redirect("shop:market")
+    else:
+        messages.info(request, "The account has already been removed from your wishlist")
         return redirect("shop:market")
