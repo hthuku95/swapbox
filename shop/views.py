@@ -52,6 +52,7 @@ def add_to_cart(request,id):
             account.status == 'IC'
             account.save()
             # Remove the acount from other wishlists
+            
             cart.accounts.add(account)
             messages.success(request, "The account was added to your cart successfully")
             return redirect("shop:market")
@@ -104,3 +105,25 @@ def remove_from_wishlist(request,id):
     else:
         messages.info(request, "The account has already been removed from your wishlist")
         return redirect("shop:market")
+
+def cart_view(request):
+    userprofile = UserProfile.objects.get(user=request.user)
+    cart = Cart.objects.get(user=userprofile)
+
+    context = {
+        'userprofile':userprofile,
+        'cart':cart
+    }
+
+    return render(request, "shop/cart.html",context)
+
+def wishlist_view(request):
+    userprofile = UserProfile.objects.get(user=request.user)
+    wishlist = Wishlist.objects.get(user=userprofile)
+
+    context = {
+        'userprofile':userprofile,
+        'wishlist':wishlist
+    }
+
+    return render(request,"shop/wishlist.html",context)

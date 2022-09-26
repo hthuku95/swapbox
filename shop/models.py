@@ -11,12 +11,18 @@ class Cart(models.Model):
     def __str__(self):
         return self.user.user.username
 
+    def get_total(self):
+        pass
+
 class Wishlist(models.Model):
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
     accounts = models.ManyToManyField(Account, blank=True)
 
     def __str__(self):
         return self.user.user.username
+    
+    def get_total(self):
+        pass
 
 # Creating a wishlist and a cart when a new user is created
 def userprofile_receiver(sender, instance, created, *args, **kwargs):
