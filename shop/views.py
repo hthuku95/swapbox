@@ -1,4 +1,4 @@
-from django.shortcuts import render,redirect
+from django.shortcuts import render,redirect,get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user
 from accounts.models import Tag,Image,Account
@@ -35,14 +35,14 @@ def account_detail_view(request,id):
 # Add to cart
 @login_required()
 def add_to_cart(request,id):
-    account = Account.objects.get(id=id)
+    account = get_object_or_404(Account, id=id)
     userprofile = UserProfile.objects.get(user=request.user)
     cart = Cart.objects.get(user=userprofile)
     
     if account.has_test:
         pass
     else:
-        if cart.accounts.filter(account__id=account.id).exists():
+        if cart.accounts.filter(account_id=account.id).exists():
             messages.info(request,"The account is already in your Cart")
             return redirect("shop:market")
         elif account.status == 'IC':
@@ -59,11 +59,11 @@ def add_to_cart(request,id):
 
 @login_required()
 def remove_from_cart(request,id):
-    account = Account.objects.get(id=id)
+    account = get_object_or_404(Account, id=id)
     userprofile = UserProfile.objects.get(user=request.user)
     cart = Cart.objects.get(user=userprofile)
 
-    if cart.accounts.filter(account__id=account.id).exists():
+    if cart.accounts.filter(account_id=account.id).exists():
         cart.accounts.remove(account)
         cart.save()
         account.status = 'OS'
@@ -76,11 +76,11 @@ def remove_from_cart(request,id):
 
 @login_required()
 def add_to_wishlist(request,id):
-    account = Account.objects.get(id=id)
+    account = get_object_or_404(Account, id=id)
     userprofile = UserProfile.objects.get(user=request.user)
     wish_list = Wishlist.objects.get(user=userprofile)
 
-    if wish_list.accounts.filter(account__id=account.id).exists():
+    if wish_list.accounts.filter(account_id=account.id).exists():
         messages.info(request, "The account is already in your wishlist")
         return redirect("shop:market")
     elif account.status == 'IC':
@@ -93,11 +93,11 @@ def add_to_wishlist(request,id):
 
 @login_required()
 def remove_from_wishlist(request,id):
-    account = Account.objects.get(id=id)
+    account = get_object_or_404(Account, id=id)
     userprofile = UserProfile.objects.get(user=request.user)
     wish_list = Wishlist.objects.get(user=userprofile)
 
-    if wish_list.accounts.filter(account__id=account.id).exists():
+    if wish_list.accounts.filter(account_id=account.id).exists():
         wish_list.accounts.remove(account)
         wish_list.save()
         messages.success(request, "The account was successfully removed from your Wishlist ")
