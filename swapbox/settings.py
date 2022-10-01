@@ -101,10 +101,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-ACCOUNT_EMAIL_VERIFICATION = "none"
-
-
 # Internationalization
 # https://docs.djangoproject.com/en/4.0/topics/i18n/
 
@@ -133,6 +129,11 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR,'media')
 
 SITE_ID = 1
+# This will be changed to the first form page for adding Profile Details
+LOGIN_REDIRECT_URL = "/dashboard/"
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+ACCOUNT_EMAIL_VERIFICATION = "none"
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
 
