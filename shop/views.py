@@ -42,17 +42,22 @@ def add_to_cart(request,id):
     if account.has_test:
         pass
     else:
-        if cart.accounts.filter(account_id=account.id).exists():
+        if cart.accounts.filter(id=account.id).exists():
             messages.info(request,"The account is already in your Cart")
             return redirect("shop:market")
         elif account.status == 'IC':
             messages.warning(request,"The account has already been auctioned off. Browse our market page for other similar accounts")
             return redirect("shop:market")
         else:
-            account.status == 'IC'
+            account.status = 'IC'
             account.save()
+
             # Remove the acount from other wishlists
-            
+            wish_lists = Wishlist.objects.filter(accounts__id=id)
+            for wish_list in wish_lists:
+                wish_list.accounts.remove(account)
+                wish_list.save()
+
             cart.accounts.add(account)
             messages.success(request, "The account was added to your cart successfully")
             return redirect("shop:market")
@@ -63,7 +68,7 @@ def remove_from_cart(request,id):
     userprofile = UserProfile.objects.get(user=request.user)
     cart = Cart.objects.get(user=userprofile)
 
-    if cart.accounts.filter(account_id=account.id).exists():
+    if cart.accounts.filter(id=account.id).exists():
         cart.accounts.remove(account)
         cart.save()
         account.status = 'OS'
@@ -80,7 +85,7 @@ def add_to_wishlist(request,id):
     userprofile = UserProfile.objects.get(user=request.user)
     wish_list = Wishlist.objects.get(user=userprofile)
 
-    if wish_list.accounts.filter(account_id=account.id).exists():
+    if wish_list.accounts.filter(id=account.id).exists():
         messages.info(request, "The account is already in your wishlist")
         return redirect("shop:market")
     elif account.status == 'IC':
@@ -97,7 +102,7 @@ def remove_from_wishlist(request,id):
     userprofile = UserProfile.objects.get(user=request.user)
     wish_list = Wishlist.objects.get(user=userprofile)
 
-    if wish_list.accounts.filter(account_id=account.id).exists():
+    if wish_list.accounts.filter(id=account.id).exists():
         wish_list.accounts.remove(account)
         wish_list.save()
         messages.success(request, "The account was successfully removed from your Wishlist ")
