@@ -11,6 +11,16 @@
 <div id="wrapper">
     <div>
         <h1>My Dashboard</h1>
+
+        {%if user_profile.mode == 'B'%}
+        <a class="btn btn-primary" href="{% url 'profiles:change_mode'%}">
+            Switch to Seller mode
+        </a>
+        {%else%}
+        <a class="btn btn-primary" href="{% url 'profiles:change_mode'%}">
+            Switch to Buyer mode
+        </a>
+        {%endif%}
     </div>
 </div>
 {%endblock%}
