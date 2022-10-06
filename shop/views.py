@@ -8,7 +8,7 @@ from .models import Cart,Wishlist
 
 # Create your views here.
 
-# article list page
+# Market View
 def market(request):
     accounts = Account.objects.filter(status='OS')
     tags = Tag.objects.all()
@@ -111,6 +111,7 @@ def remove_from_wishlist(request,id):
         messages.info(request, "The account has already been removed from your wishlist")
         return redirect("shop:market")
 
+@login_required()
 def cart_view(request):
     userprofile = UserProfile.objects.get(user=request.user)
     cart = Cart.objects.get(user=userprofile)
@@ -122,6 +123,7 @@ def cart_view(request):
 
     return render(request, "shop/cart.html",context)
 
+@login_required()
 def wishlist_view(request):
     userprofile = UserProfile.objects.get(user=request.user)
     wishlist = Wishlist.objects.get(user=userprofile)
