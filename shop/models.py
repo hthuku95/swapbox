@@ -12,7 +12,11 @@ class Cart(models.Model):
         return self.user.user.username
 
     def get_total(self):
-        pass
+        total = 0.0
+        for account in self.accounts.all():
+            total += account.get_final_price()
+        return total
+
 
 class Wishlist(models.Model):
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
@@ -22,7 +26,10 @@ class Wishlist(models.Model):
         return self.user.user.username
     
     def get_total(self):
-        pass
+        total = 0.0
+        for account in self.accounts.all():
+            total += account.get_final_price()
+        return total
 
 # Creating a wishlist and a cart when a new user is created
 def userprofile_receiver(sender, instance, created, *args, **kwargs):

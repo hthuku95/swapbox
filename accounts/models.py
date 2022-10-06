@@ -65,6 +65,14 @@ class Account(models.Model):
         'id': self.id
     })
 
+    def get_final_price(self):
+        if self.discount_price:
+            return discount_price
+        else:
+            return self.selling_price
+        
+    def get_market_fee(self):
+        return self.market_fee
     # When one user adds an account to cart, the account is temporarily removed from the marketplace
     def get_add_to_cart_url(self):
         return reverse("shop:add-to-cart-url", kwargs={
