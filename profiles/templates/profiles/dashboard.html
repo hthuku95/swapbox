@@ -9,7 +9,7 @@
 {%block content%}
 <!-- Wrapper -->
 <div id="wrapper">
-    <div>
+    <div class="container">
         <h1>My Dashboard</h1>
 
         {%if user_profile.mode == 'B'%}
@@ -21,6 +21,14 @@
             Switch to Buyer mode
         </a>
         {%endif%}
+        <div class="inner">
+            <a class="btn btn-secondary" href="{% url 'shop:cart-view'%}">
+                Cart
+            </a>
+            <a class="btn btn-secondary" href="{% url 'shop:wishlist-view'%}">
+                Wishlist
+            </a>
+        </div>   
     </div>
 </div>
 {%endblock%}
