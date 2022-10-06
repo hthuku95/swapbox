@@ -58,7 +58,7 @@ class Account(models.Model):
     number_of_completed_orders = models.FloatField(blank=True,null=True)
 
     def __str__(self):
-        return self.title
+        return "Account - "+self.title
 
     def get_absolute_url(self):
         return reverse("shop:account-detail-view", kwargs={
@@ -73,6 +73,7 @@ class Account(models.Model):
         
     def get_market_fee(self):
         return self.market_fee
+        
     # When one user adds an account to cart, the account is temporarily removed from the marketplace
     def get_add_to_cart_url(self):
         return reverse("shop:add-to-cart-url", kwargs={
