@@ -2,20 +2,16 @@ from django.shortcuts import render,redirect
 from .models import UserProfile
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from shop.models import Cart, Wishlist
 
 # Create your views here.
 @login_required()
 def dashboard(request):
     user_profile = UserProfile.objects.get(user=request.user)
-    cart = Cart.objects.get(user=user_profile)
-    wishlist = Wishlist.objects.get(user=user_profile)
 
     context = {
-        'user_profile':user_profile,
-        'cart':cart,
-        'wishlist':wishlist
+        'user_profile':user_profile
     }
+
     return render(request, "profiles/dashboard.html",context)
 
 
