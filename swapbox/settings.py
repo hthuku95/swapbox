@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     'academy',
     'shop',
     'profiles',
+    'payments',
     'accounts',
     'exams',
 
