@@ -42,7 +42,7 @@ def add_to_cart(request,id):
     if account.has_test:
         pass
     else:
-        if cart.accounts.filter(id=account.id).exists():
+        if cart.accounts_to_be_purchased.filter(id=account.id).exists():
             messages.info(request,"The account is already in your Cart")
             return redirect("shop:market")
         elif account.status == 'IC':
@@ -58,7 +58,7 @@ def add_to_cart(request,id):
                 wish_list.accounts.remove(account)
                 wish_list.save()
 
-            cart.accounts.add(account)
+            cart.accounts_to_be_purchased.add(account)
             messages.success(request, "The account was added to your cart successfully")
             return redirect("shop:market")
 
@@ -68,8 +68,8 @@ def remove_from_cart(request,id):
     userprofile = UserProfile.objects.get(user=request.user)
     cart = Cart.objects.get(user=userprofile)
 
-    if cart.accounts.filter(id=account.id).exists():
-        cart.accounts.remove(account)
+    if cart.accounts_to_be_purchased.filter(id=account.id).exists():
+        cart.accounts_to_be_purchased.remove(account)
         cart.save()
         account.status = 'OS'
         account.save()

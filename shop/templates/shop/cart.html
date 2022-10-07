@@ -16,7 +16,7 @@
         </tr>
         </thead>
         <tbody>
-        {% for account in cart.accounts.all %}
+        {% for account in cart.accounts_to_be_purchased.all %}
         <tr>
             <th scope="row">{{ forloop.counter }}</th>
             <td>{{ account.title }}</td>
