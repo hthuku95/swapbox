@@ -13,12 +13,17 @@ class Cart(models.Model):
     def __str__(self):
         return self.user.user.username
 
-    def get_total(self):
+    def get_total_price_of_accounts_to_be_purchased(self):
         total = 0.0
-        for account in self.accounts.all():
+        for account in self.accounts_to_be_purchased.all():
             total += account.get_final_price()
         return total
-
+    
+    def get_total_price_of_pending_accounts(self):
+        total = 0.0
+        for account in self.pending_accounts.all():
+            total += account.get_final_price()
+        return total
 
 class Wishlist(models.Model):
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
