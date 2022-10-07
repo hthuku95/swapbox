@@ -31,20 +31,20 @@
         </tr>
         <tr>
             <td colspan="5">
-            <a class='btn btn-primary float-right' href='/'>Continue shopping</a>
+            <a class='btn btn-primary float-right' href="{% url 'shop:market' %}">Continue shopping</a>
             </td>
         </tr>
         {% endfor %}
 
-        {% if cart.get_total %}
+        {% if cart.get_total_price_of_accounts_to_be_purchased %}
         <tr>
             <td colspan="4"><b>Order Total</b></td>
-            <td><b>${{ cart.get_total }}</b></td>
+            <td><b>${{ cart.get_total_price_of_accounts_to_be_purchased }}</b></td>
         </tr>
         <tr>
             <td colspan="5">
             <a class='btn btn-warning float-right ml-2' href='#'>Proceed to checkout</a>
-            <a class='btn btn-primary float-right' href='#'>Continue shopping</a>
+            <a class='btn btn-primary float-right' href="{% url 'shop:market' %}">Continue shopping</a>
             </td>
         </tr>
         {% endif %}
