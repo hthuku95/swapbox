@@ -6,9 +6,9 @@ from accounts.models import Account
 
 class Cart(models.Model):
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
-    accounts_to_be_purchased = models.ManyToManyField(Account, related_name="Accounts to be purchased",blank=True)
-    pending_accounts = models.ManyToManyField(Account, blank=True,related_name="Pending accounts")
-    accounts_to_be_uploaded_on_the_market = models.ManyToManyField(Account, blank=True,related_name="Accouts to be uploadedon the market")
+    accounts_to_be_purchased = models.ManyToManyField(Account, related_name="Accounts to be purchased+",blank=True)
+    pending_accounts = models.ManyToManyField(Account, blank=True,related_name="Pending accounts+")
+    accounts_to_be_uploaded_on_the_market = models.ManyToManyField(Account, blank=True,related_name="Accouts to be uploadedon the market+")
 
     def __str__(self):
         return self.user.user.username
