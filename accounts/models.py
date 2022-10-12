@@ -43,6 +43,7 @@ class Account(models.Model):
     discount_price = models.FloatField(blank=True,null=True)
     market_fee = models.FloatField(blank=True,null=True)
     has_test = models.BooleanField(default=False)
+    verified_and_securely_transfared = models.BooleanField(default=False)
 
     # User can only add three images
     images = models.ManyToManyField(Image,blank=True)
