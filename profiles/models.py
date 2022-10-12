@@ -9,13 +9,15 @@ MODE_CHOICES = (
 )
 class ProfileSettings(models.Model):
     pass
+class Wallet(models.Model):
+    pass
 
 class UserProfile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     mode = models.CharField(choices=MODE_CHOICES, max_length=2,blank=True,null=True)
     profile_settings = models.ForeignKey(ProfileSettings, blank=True,null=True, on_delete=models.CASCADE)
+    wallet = models.ForeignKey(Wallet, blank=True,null=True, on_delete=models.CASCADE)
 
-    # Wallet
     # Credit/Debit Cards
     # Paypal Accounts
 
