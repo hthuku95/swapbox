@@ -10,7 +10,19 @@ MODE_CHOICES = (
 class ProfileSettings(models.Model):
     pass
 class Wallet(models.Model):
-    pass
+    balance = models.FloatField(default=0.0)
+
+    def get_total_amount_spent(self):
+        pass
+
+    def get_total_amount_earned(self):
+        pass
+
+    def get_total_amount_deposited(self):
+        pass
+
+    def get_total_amount_withdrawn(self):
+        pass
 
 class UserProfile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
