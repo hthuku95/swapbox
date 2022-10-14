@@ -7,6 +7,12 @@ ORDER_TYPE_CHOICES = (
     ('AU','Account Upload'),
     ('AP','Account Purchase')
 )
+
+PAYMENT_METHOD_CHOICES = (
+    ('P','Paypal'),
+    ('C','Card'),
+    ('W','Wallet')
+)
 class BillingAddress(models.Model):
     user = models.ForeignKey(UserProfile, blank=True,null=True, on_delete=models.CASCADE)
     street_address = models.CharField(max_length=100,blank=True,null=True)
@@ -22,6 +28,7 @@ class Order(models.Model):
     cart = models.ForeignKey(Cart, on_delete=models.SET_NULL,blank=True,null=True)
     value = models.FloatField(default=0.0)
     billing_address = models.ForeignKey(BillingAddress, blank=True,null=True, on_delete=models.SET_NULL)
+    payment_method = models.CharField(choices=PAYMENT_METHOD_CHOICES,blank=True,null=True, max_length=2)
     payment_complete = models.BooleanField(default=False)
     order_type = models.CharField(choices=ORDER_TYPE_CHOICES, max_length=2,blank=True,null=True)
 
