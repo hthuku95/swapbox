@@ -38,6 +38,18 @@ class UserProfile(models.Model):
     def __str__(self):
         return self.user.username
 
+    def get_my_sold_accounts(self):
+        pass
+
+    def get_my_accounts_on_sale(self):
+        pass
+
+    def get_my_accounts_on_draft(self):
+        pass
+
+    def get_my_bought_accounts(self):
+        pass
+
 
 def userprofile_receiver(sender, instance, created, *args, **kwargs):
     if created:
