@@ -43,11 +43,13 @@ class Account(models.Model):
     discount_price = models.FloatField(blank=True,null=True)
     market_fee = models.FloatField(blank=True,null=True)
     has_test = models.BooleanField(default=False)
+    reference_id = models.CharField(blank=True,null=True, max_length=50)
     verified_and_securely_transfared = models.BooleanField(default=False)
 
     # User can only add three images
     images = models.ManyToManyField(Image,blank=True)
 
+    percent_of_complete_details = models.FloatField(default=0.0)
     # User can only add 5 tags
     tags = models.ManyToManyField(Tag,blank=True)
     status = models.CharField(choices=STATUS_CHOICES, max_length=2)
@@ -57,6 +59,8 @@ class Account(models.Model):
     ratings = models.FloatField(blank=True,null=True)
     reviews  = models.FloatField(blank=True,null=True)
     number_of_completed_orders = models.FloatField(blank=True,null=True)
+    market_fee_payment_completed = models.BooleanField(default=False)
+    last_time_account_was_edited = models.DateTimeField(blank=True,null=True, auto_now=False, auto_now_add=False)
 
     def __str__(self):
         return "Account - "+self.title

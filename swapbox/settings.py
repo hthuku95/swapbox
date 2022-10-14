@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     'shop',
     'profiles',
     'payments',
+    'notifications',
     'accounts',
     'exams',
 

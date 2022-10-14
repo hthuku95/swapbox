@@ -9,8 +9,7 @@ ORDER_TYPE_CHOICES = (
 )
 
 PAYMENT_METHOD_CHOICES = (
-    ('P','Paypal'),
-    ('C','Card'),
+    ('PC','Paypal or Card'),
     ('W','Wallet')
 )
 class BillingAddress(models.Model):
