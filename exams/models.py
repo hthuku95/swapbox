@@ -35,10 +35,16 @@ class InstructionFile(models.Model):
 class Exam(models.Model):
     title = models.CharField(blank=True,null=True, max_length=200)
     account = models.ForeignKey(Account, on_delete=models.CASCADE)
-    # Graded in percentage
-    pass_mark = models.FloatField()
-    type = models.CharField(choices=EXAM_TYPE_CHOICES,blank=True, max_length=2)
+
+    # The top scorer is the one who gets to buy the account
+    total_number_of_student_slots = models.IntegerField(default=0)
+    exam_type = models.CharField(choices=EXAM_TYPE_CHOICES,blank=True, max_length=2)
     questions = models.ManyToManyField(Question, blank=True)
+
+    # if type == QA:
+    no_of_questions = models.IntegerField(default=0)
+    # it will be updated to true once the examiner finishes uploading the questions
+    completed = models.BooleanField(default=False)
 
     # if type == TA:
     instructions = models.TextField(blank=True,null=True)

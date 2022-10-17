@@ -5,7 +5,8 @@ from profiles.models import UserProfile
 # Create your models here.
 ORDER_TYPE_CHOICES = (
     ('AU','Account Upload'),
-    ('AP','Account Purchase')
+    ('AP','Account Purchase'),
+    ('PC','Price Change')
 )
 
 PAYMENT_METHOD_CHOICES = (

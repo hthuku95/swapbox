@@ -8,7 +8,8 @@ class Cart(models.Model):
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
     accounts_to_be_purchased = models.ManyToManyField(Account, related_name="Accounts to be purchased+",blank=True)
     pending_accounts = models.ManyToManyField(Account, blank=True,related_name="Pending accounts+")
-    accounts_to_be_uploaded_on_the_market = models.ManyToManyField(Account, blank=True,related_name="Accouts to be uploadedon the market+")
+    accounts_to_be_uploaded_on_the_market = models.ManyToManyField(Account, blank=True, related_name="Accouts to be uploadedon the market+")
+    accounts_to_be_changed_price = models.ManyToManyField(Account, blank=True, related_name="Accounts which the prices are being changed+")
 
     def __str__(self):
         return self.user.user.username
@@ -24,6 +25,20 @@ class Cart(models.Model):
         for account in self.pending_accounts.all():
             total += account.get_final_price()
         return total
+
+    def get_total_fee_of_accounts_to_be_uploaded_on_market(self):
+        total = 0.0
+        for account in self.accounts_to_be_uploaded_on_the_market.all():
+            total += account.get_market_fee()
+        return total
+
+    def get_total_price_of_accounts_to_be_price_changed(self):
+        total = 0.0
+        for account in self.accounts_to_be_changed_price.all():
+            total+= account.get_market_fee_after_price_change()
+        return total
+
+
 
 class Wishlist(models.Model):
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)

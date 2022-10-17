@@ -9,6 +9,7 @@ STATUS_CHOICES = (
     ('D', 'Draft'),
     ('OS', 'Onsale'),
     ('IC', 'InsideCart')
+    # When an account is IC it will still be displayed on the Onsale panel of the seller
 )
 
 class Image(models.Model):
@@ -41,10 +42,14 @@ class Account(models.Model):
     description = models.TextField(blank=True,null=True)
     selling_price = models.FloatField(blank=True,null=True)
     discount_price = models.FloatField(blank=True,null=True)
+
     market_fee = models.FloatField(blank=True,null=True)
+    market_fee_after_price_change = models.FloatField(blank=True,null=True)
+
     has_test = models.BooleanField(default=False)
     reference_id = models.CharField(blank=True,null=True, max_length=50)
     verified_and_securely_transfared = models.BooleanField(default=False)
+    no_of_times_price_has_changed = models.IntegerField(default = 0)
 
     # User can only add three images
     images = models.ManyToManyField(Image,blank=True)
@@ -78,6 +83,9 @@ class Account(models.Model):
         
     def get_market_fee(self):
         return self.market_fee
+
+    def get_market_fee_after_price_change(self):
+        return self.market_fee_after_price_change
         
     # When one user adds an account to cart, the account is temporarily removed from the marketplace
     def get_add_to_cart_url(self):
@@ -100,4 +108,27 @@ class Account(models.Model):
             'id':self.id
         })
 
+class View(models.Model):
+    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+    date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.id
     
+
+class Impression(models.Model):
+    account = models.OneToOneField(Account, blank=True,null=True, on_delete=models.CASCADE)
+    no_of_searches = models.IntegerField(default=0)
+    internal_views = models.ManyToManyField(View, blank=True,related_name="Internal views+")
+    views = models.ManyToManyField(View,blank=True,related_name="View+")
+    no_of_wishlist = models.IntegerField(default=0)
+    no_of_pending_carts = models.IntegerField(default=0)
+
+    def __str__(self):
+        return "ACCOUNT - "+ self.account.title
+    
+    def get_number_of_views(self):
+        pass
+
+    def get_number_of_internal_views(self):
+        pass
