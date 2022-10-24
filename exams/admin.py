@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Exam, Attempt, Answer, Question, InstructionFile, AnswerFile
+from .models import Exam, Attempt, Answer, Question, InstructionFile, AnswerFile, ExamTypeInstructions
 # Register your models here.
 
 admin.site.register(Question)
@@ -8,3 +8,4 @@ admin.site.register(Attempt)
 admin.site.register(Answer)
 admin.site.register(AnswerFile)
 admin.site.register(InstructionFile)
+admin.site.register(ExamTypeInstructions)

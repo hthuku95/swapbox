@@ -131,7 +131,7 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR,'media')
 
 SITE_ID = 1
-# This will be changed to the first form page for adding Profile Details
+# This will be changed to the first form page for adding Profile Details if profile_creation_complete == False
 LOGIN_REDIRECT_URL = "/dashboard/"
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 ACCOUNT_EMAIL_VERIFICATION = "none"

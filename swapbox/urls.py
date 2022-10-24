@@ -8,9 +8,11 @@ from . import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('allauth.urls')),
+    path('my_accounts/',include('accounts.urls')),
     path('shop/',include('shop.urls',namespace='shop')),
     path(r'',views.index_view),
     path(r'dashboard/',include('profiles.urls')),
+    path(r'payments/',include('payments.urls')),
 ]
 
 #appending the static files urls to the above media

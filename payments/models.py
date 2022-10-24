@@ -35,5 +35,13 @@ class Order(models.Model):
     def __str__(self):
         return "ORDER "+ self.reference_code
 
-        
+class Payment(models.Model):
+    order = models.ForeignKey(Order, on_delete=models.CASCADE)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return "Payment for Order -"+self.order.reference_code
+    
+
+
     

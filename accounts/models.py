@@ -71,7 +71,27 @@ class Account(models.Model):
         return "Account - "+self.title
 
     def get_absolute_url(self):
-        return reverse("shop:account-detail-view", kwargs={
+        return reverse("accounts:account-detail-view", kwargs={
+            'id': self.id
+        })
+
+    def get_impressions_url(self):
+        return reverse("accounts:account-impressions", kwargs={
+            'id':self.id
+        })
+
+    def get_edit_account_details_url(self):
+        return reverse("accounts:edit-account-details", kwargs={
+            'id':self.id
+        })
+    
+    def get_update_market_price_url(self):
+        return reverse("accounts:update-account-market-price",kwargs={
+            'id':self.id
+        })
+        
+    def get_absolute_market_url(self):
+        return reverse("shop:account-market-detail-view", kwargs={
         'id': self.id
     })
 
