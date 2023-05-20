@@ -46,7 +46,6 @@ class Account(models.Model):
     market_fee = models.FloatField(blank=True,null=True)
     market_fee_after_price_change = models.FloatField(blank=True,null=True)
 
-    has_test = models.BooleanField(default=False)
     reference_id = models.CharField(blank=True,null=True, max_length=50)
     verified_and_securely_transfared = models.BooleanField(default=False)
     no_of_times_price_has_changed = models.IntegerField(default = 0)
@@ -127,6 +126,26 @@ class Account(models.Model):
         return reverse("shop:remove-from-wishlist-url",kwargs={
             'id':self.id
         })
+
+class Credential(models.Model):
+    account = models.ForeignKey(Account, on_delete=models.CASCADE)
+    login_email = models.CharField(blank=True,null=True, max_length=512)
+    login_username = models.CharField(blank=True,null=True, max_length=512)
+    login_email_password = models.CharField(blank=True,null=True, max_length=512)
+    recovery_email = models.CharField(blank=True,null=True, max_length=512)
+    recovery_email_password = models.CharField(blank=True,null=True, max_length=512)
+    # For Google allauth accounts
+    login_gmail = models.CharField(blank=True,null=True, max_length=512)
+    login_gmail_password = models.CharField(blank=True,null=True, max_length=512)
+    recovery_gmail = models.CharField(blank=True,null=True, max_length=512)
+    recovery_gmail_password = models.CharField(blank=True,null=True, max_length=50)
+    allowed_viewers = models.ManyToManyField(UserProfile, blank=True)
+
+    def __str__(self):
+        return 'CREDENTIALS FOR ACCOUNT' + self.account.title
+    
+    
+    
 
 class View(models.Model):
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
