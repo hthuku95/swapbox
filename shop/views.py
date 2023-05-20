@@ -39,28 +39,25 @@ def add_to_cart(request,id):
     userprofile = UserProfile.objects.get(user=request.user)
     cart = Cart.objects.get(user=userprofile)
     
-    if account.has_test:
-        pass
+    if cart.accounts_to_be_purchased.filter(id=account.id).exists():
+        messages.info(request,"The account is already in your Cart")
+        return redirect("shop:market")
+    elif account.status == 'IC':
+        messages.warning(request,"The account has already been auctioned off. Browse our market page for other similar accounts")
+        return redirect("shop:market")
     else:
-        if cart.accounts_to_be_purchased.filter(id=account.id).exists():
-            messages.info(request,"The account is already in your Cart")
-            return redirect("shop:market")
-        elif account.status == 'IC':
-            messages.warning(request,"The account has already been auctioned off. Browse our market page for other similar accounts")
-            return redirect("shop:market")
-        else:
-            account.status = 'IC'
-            account.save()
+        account.status = 'IC'
+        account.save()
 
-            # Remove the acount from other wishlists
-            wish_lists = Wishlist.objects.filter(accounts__id=id)
-            for wish_list in wish_lists:
-                wish_list.accounts.remove(account)
-                wish_list.save()
+        # Remove the acount from other wishlists
+        wish_lists = Wishlist.objects.filter(accounts__id=id)
+        for wish_list in wish_lists:
+            wish_list.accounts.remove(account)
+            wish_list.save()
 
-            cart.accounts_to_be_purchased.add(account)
-            messages.success(request, "The account was added to your cart successfully")
-            return redirect("shop:market")
+        cart.accounts_to_be_purchased.add(account)
+        messages.success(request, "The account was added to your cart successfully")
+        return redirect("shop:market")
 
 @login_required()
 def remove_from_cart(request,id):
