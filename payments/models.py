@@ -2,6 +2,7 @@ from django.db import models
 from shop.models import Cart
 from profiles.models import UserProfile
 
+
 # Create your models here.
 ORDER_TYPE_CHOICES = (
     ('AU','Account Upload'),
@@ -13,6 +14,7 @@ PAYMENT_METHOD_CHOICES = (
     ('PC','Paypal or Card'),
     ('W','Wallet')
 )
+
 class BillingAddress(models.Model):
     user = models.ForeignKey(UserProfile, blank=True,null=True, on_delete=models.CASCADE)
     street_address = models.CharField(max_length=100,blank=True,null=True)
