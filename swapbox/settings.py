@@ -35,7 +35,6 @@ INSTALLED_APPS = [
     'payments',
     'notifications',
     'accounts',
-    'exams',
 
     # allauth
     'allauth',
