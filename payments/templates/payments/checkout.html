@@ -2,5 +2,49 @@
 {% load static %}
 
 {% block content %}
+    <h2 class="major"> Checkout Form</h2>
+    <p>Enter your Billing Address</p>
+    <form method="post" action="/payments/checkout/{{payment_order.reference_code}}/">
+        <div class="row gtr-uniform">
+            {%csrf_token%}
+            <div class="col-6 col-12-xsmall">
+                <label for="first_name">First name</label>
+                <input type="text" name="first_name" id="first_name" value="{{user.first_name}}"/>
+            </div>
+            <div class="col-6 col-12-xsmall">
+                <label for="last_name">Last name</label>
+                <input type="text" name="last_name" id="last_name" value="{{user.last_name}}"/>
+            </div>
+            <div class="col-12">
+                <label for="billing_address">Address</label>
+                <input type="text" id="billing_address" name="billing_address" placeholder="Street Address">
+            </div>
+            <div class="col-12">
+                <label for="billing_address2">Address 2 (Optional)</label>
+                <input type="text" id="billing_address2" name="billing_address2" placeholder="Apartment or suite">
+            </div>
+            <div class="col-6 col-12-xsmall">
+                <label for="billing_zip">Zip code</label>
+                <input type="text" name="billing_zip" id="billing_zip" placeholder="Billing Zip"/>
+            </div>
 
+            <div class="col-12">
+                <input type="checkbox" id="set_default_billing" name="set_default_billing">
+                <label for="set_default_billing">Save as default billing address</label>
+            </div>
+
+            {% if default_billing_address %}
+            <div class="col-12">
+                <input type="checkbox" id="use_default_billing" name="use_default_billing">
+                <label for="use_default_billing">Use default billing address: {{ default_billing_address.street_address|truncatechars:10 }}</label>
+            </div>
+            {% endif %}
+
+            <div class="col-12">
+                <ul class="actions">
+                    <li><input type="submit" value="Submit" class="primary" /></li>
+                </ul>
+            </div>
+        </div>
+    </form>
 {% endblock content %}
