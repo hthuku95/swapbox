@@ -64,11 +64,12 @@ def checkout_view(request):
                     order.billing_address = billing_address
                     order.save()
 
-                    messages.success(request,"")
-                    return redirect('')
+                    messages.success(request,"Using default billing address")
+                    # how to add slug field to this
+                    return redirect('/payments/payment/'+order.reference_code+'/')
                 else:
-                    messages.warning(request,"")
-                    return redirect('')
+                    messages.warning(request,"You dont have a default billing address")
+                    return redirect("payments:checkuot-view")
 
             else:
                 # User is entering a new billing Address
@@ -122,11 +123,11 @@ def checkout_view(request):
                 except Exception as e:
                     messages.warning(request,"Please enter all the required fields")
                     print(e)
-                    return redirect('/payments/checkout/')
+                    return redirect("payments:checkuot-view")
         else:
             messages.warning(request,"Plese complete all the required fields")
             print("exception occured or something")
-            return redirect('/payments/checkout/')
+            return redirect("payments:checkuot-view")
     else:
         form = CheckoutForm()
         context.update({
