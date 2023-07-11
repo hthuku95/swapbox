@@ -2,7 +2,6 @@ from django.db import models
 from shop.models import Cart
 from profiles.models import UserProfile
 
-
 # Create your models here.
 ORDER_TYPE_CHOICES = (
     ('AU','Account Upload'),
