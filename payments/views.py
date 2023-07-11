@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
 from .models import Payment, Order, BillingAddress
 from shop.models import Cart
 from .forms import CheckoutForm
@@ -11,11 +12,19 @@ import string
 def generate_reference_code():
     return ''.join(random.choices(string.ascii_lowercase + string.digits, k=20))
 
+@login_required()
 def payment_details(request,slug):
+    order = Order.objects.get(reference_code = slug)
+
+    context = {
+        'order':order
+    }
     
     return render(request, "payments/payment_details.html")
 
+@login_required()
 def checkout_view(request):
+    # Remember to handle all tthe three order type scenarios
     userprofile = UserProfile.objects.get(user=request.user)
     cart = Cart.objects.get(user=userprofile)
 
@@ -47,6 +56,7 @@ def checkout_view(request):
                 order = Order(
                     reference_code = generate_reference_code(),
                     cart = cart,
+                    value = cart.get_total_price_of_accounts_to_be_purchased()
                     order_type = 'AP'
                 )
                 order.save()
@@ -78,7 +88,7 @@ def checkout_view(request):
                 m_billing_zip = form.cleaned_data['billing_zip']
                 m_first_name = form.cleaned_data['first_name']
                 m_last_name = form.cleaned_data['last_name']
-
+                m_payment_method = form.cleaned_data['payment_method']
                 try:
                     user = request.user
 
@@ -115,6 +125,7 @@ def checkout_view(request):
                         address.save()
                         
                     order.billing_address = address
+                    order.payment_method = m_payment_method
                     order.save()
 
                     messages.success(request,"Billing address saved succesfully. Complete payment!")
