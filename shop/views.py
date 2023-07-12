@@ -11,13 +11,9 @@ from .models import Cart,Wishlist
 # Market View
 def market(request):
     accounts = Account.objects.filter(status='OS')
-    tags = Tag.objects.all()
-    images = Image.objects.all()
 
     context = {
-        'accounts':accounts,
-        'tags':tags,
-        'images':images
+        'accounts':accounts
     }
     return render(request,'shop/market.html',context)
 
