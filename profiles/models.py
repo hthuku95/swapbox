@@ -9,6 +9,13 @@ MODE_CHOICES = (
 )
 class ProfileSettings(models.Model):
     pass
+
+class CreditCard(models.Model):
+    pass
+
+class PayPalAccount(models.Model):
+    pass
+
 class Wallet(models.Model):
     balance = models.FloatField(default=0.0)
 
@@ -30,6 +37,8 @@ class UserProfile(models.Model):
     profile_creation_complete = models.BooleanField(default=False)
     profile_settings = models.ForeignKey(ProfileSettings, blank=True,null=True, on_delete=models.SET_NULL)
     wallet = models.ForeignKey(Wallet, blank=True,null=True, on_delete=models.SET_NULL)
+    credit_card = models.ForeignKey(CreditCard, blank=True,null=True, on_delete=models.SET_NULL)
+    paypal_account = models.ForeignKey(PayPalAccount, blank=True,null=True, on_delete=models.SET_NULL)
 
     # Credit/Debit Cards
     # Paypal Accounts

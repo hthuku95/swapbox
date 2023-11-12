@@ -12,6 +12,18 @@ STATUS_CHOICES = (
     # When an account is IC it will still be displayed on the Onsale panel of the seller
 )
 
+class SecurityStep(models.Model):
+    title = models.CharField( max_length=50)
+    step_number = models.IntegerField()
+    text_body = models.TextField(blank=True,null=True)
+    image = models.FileField(blank=True,null=True, upload_to=None, max_length=100)
+    video = models.FileField(blank=True,null=True, upload_to=None, max_length=100)
+
+    def __str__(self):
+        return self.title
+    # will be handled like a blog
+    # on the page put a checkbox that must bee clicked for the user to click the next button
+    # The next step button will be inactive, and it will only be activated once the checkbox is clicked
 class Image(models.Model):
     image = models.FileField(max_length=100)
 
@@ -23,8 +35,7 @@ class Tag(models.Model):
     name = models.CharField(blank=True, null=True, max_length=50)
     
     def __str__(self):
-        return self.name
-    
+        return self.name   
 
 class Account(models.Model):
     current_owner = models.ForeignKey(UserProfile,null=True,blank=True, on_delete=models.SET_NULL)

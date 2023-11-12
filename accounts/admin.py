@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Account,Image,Impression,Tag,View,Credential
+from .models import Account,Image,Impression,Tag,View,Credential,SecurityStep
 # Register your models here.
 
 
@@ -9,3 +9,4 @@ admin.site.register(Tag)
 admin.site.register(Impression)
 admin.site.register(View)
 admin.site.register(Credential)
+admin.site.register(SecurityStep)
