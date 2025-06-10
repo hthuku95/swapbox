@@ -2,6 +2,10 @@ from django.shortcuts import render,redirect
 from .models import UserProfile
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+import logging
+import datetime
+
+logger = logging.getLogger(__name__)
 
 # Create your views here.
 @login_required()

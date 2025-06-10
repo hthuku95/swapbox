@@ -7,6 +7,10 @@ from profiles.models import UserProfile
 from django.contrib import messages
 import random
 import string
+import logging
+import datetime
+
+logger = logging.getLogger(__name__)
 
 # Create your views here.
 def generate_reference_code():
@@ -15,12 +19,17 @@ def generate_reference_code():
 @login_required()
 def payment_details(request,slug):
     order = Order.objects.get(reference_code = slug)
+    userprofile = UserProfile.objects.get(user=request.user)
+    timestamp  = datetime.datetime.now()
+
+    logger.info(f"{timestamp} fetching payment details of User {userprofile.user.username}")
 
     context = {
-        'order':order
+        'order':order,
+        'userprofile':userprofile
     }
     
-    return render(request, "payments/payment_details.html")
+    return render(request, "payments/payment_details.html",context)
 
 @login_required()
 def checkout_view(request):
@@ -32,119 +41,156 @@ def checkout_view(request):
         'cart':cart,
         'userprofile':userprofile
     }
+    # Fetching Default Billing Address
+    try:
+        billing_address_qs = BillingAddress.objects.filter(
+            user=userprofile,
+            default=True
+        )
 
-    billing_address_qs = BillingAddress.objects.filter(
-        user=userprofile,
-        default=True
-    )
-
-    if billing_address_qs.exists():
-        context.update(
-            {'default_billing_address': billing_address_qs[0]})
+        if billing_address_qs.exists():
+            context.update(
+                {'default_billing_address': billing_address_qs[0]})
+        timestamp = datetime.datetime.now()
+    except Exception as e:
+        logger.exception(f"{timestamp}: Exception: {e}")
+        logger.error(f"{timestamp}: Error fetching Default billing Address of user:{userprofile.user.username}")
 
     if request.method == 'POST':
-        form =CheckoutForm(request.POST)
+        # Fetching Form
+        try:
+            logger.info(f"{timestamp}Checking validity of data from checkout form of user{userprofile.user.username}")
+            form =CheckoutForm(request.POST)
+        except:
+            logger.exception(f"{timestamp}: Exception: {e}")
+            logger.error(f"{timestamp}: Error Fetchin Checkout Form: {form}  from User {userprofile}")
         if form.is_valid():
-            order_qs = Order.objects.filter(
-                cart = cart,
-                order_type = 'AP',
-                payment_complete = False
-            )
-            if order_qs.exists():
-                order = order_qs[0]
-            else:
-                order = Order(
-                    reference_code = generate_reference_code(),
+            try:
+                # fetching order
+                order_qs = Order.objects.filter(
                     cart = cart,
-                    value = cart.get_total_price_of_accounts_to_be_purchased()
-                    order_type = 'AP'
+                    order_type = 'AP',
+                    payment_complete = False
                 )
-                order.save()
+                if order_qs.exists():
+                    order = order_qs[0]
+                else:
+                    order = Order(
+                        reference_code = generate_reference_code(),
+                        cart = cart,
+                        value = cart.get_total_price_of_accounts_to_be_purchased()
+                        order_type = 'AP'
+                    )
+                    order.save()
+            except Exception as e:
+                logger.exception(f"{timestamp}: Exception: {e}")
+                logger.error(f"{timestamp}: Error Fetching/creating order {order} of User {userprofile}")
 
-            use_default_billing = form.cleaned_data.get(
-                    'use_default_billing'
-                )
+            # Using Default Biing Address
+            try:
+                use_default_billing = form.cleaned_data.get(
+                        'use_default_billing'
+                    )
+            except Exception as e:
+                logger.exception(f"{timestamp}: Exception: {e}")
+                logger.error(f"{timestamp}: Error Fetching the 'Use Default Billing Address' from Checkout form from user {userprofile}")
+
 
             if use_default_billing:
-                print("Using the defualt billing address")
-                address_qs = BillingAddress.objects.filter(
-                    user=userprofile,
-                    default=True
-                )
-                if address_qs.exists():
-                    billing_address = address_qs[0]
-                    order.billing_address = billing_address
-                    order.save()
+                try:
+                    logger.info(f"{timestamp}: Using the defualt billing address for User{userprofile}")
+                    address_qs = BillingAddress.objects.filter(
+                        user=userprofile,
+                        default=True
+                    )
+                    if address_qs.exists():
+                        billing_address = address_qs[0]
+                        order.billing_address = billing_address
+                        order.save()
 
-                    messages.success(request,"Using default billing address")
-                    # how to add slug field to this
-                    return redirect('/payments/payment/'+order.reference_code+'/')
+                        messages.success(request,"Using default billing address")
+                        # how to add slug field to this
+                        return redirect('/payments/payment/'+order.reference_code+'/')
+                except Exception as e:
+                    logger.exception(f"{timestamp}: Exception: {e}")
+                    logger.error(f"{timestamp}: Error Fetchin Default Billing Address of User {userprofile}")
+
                 else:
                     messages.warning(request,"You dont have a default billing address")
                     return redirect("payments:checkuot-view")
             else:
                 # User is entering a new billing Address
-                m_billing_address = form.cleaned_data['billing_address']
-                m_billing_address2 = form.cleaned_data['billing_address2']
-                m_billing_zip = form.cleaned_data['billing_zip']
-                m_first_name = form.cleaned_data['first_name']
-                m_last_name = form.cleaned_data['last_name']
-                m_payment_method = form.cleaned_data['payment_method']
                 try:
-                    user = request.user
-
-                    if user.first_name and user.last_name:
-                        address = BillingAddress(
-                                    user = userprofile,
-                                    street_address=m_billing_address,
-                                    apartment_address=m_billing_address2,
-                                    zip=m_billing_zip)
-                        address.save()
-
-                        # Setting default billing address
-                        set_default_billing = form.cleaned_data.get(
-                                'set_default_billing'
-                            )
-
-                        if set_default_billing:
-                            address.default = True
+                    logger.info(f"{timestamp}: User {userprofile} is entering a new billing Address")
+                    m_billing_address = form.cleaned_data['billing_address']
+                    m_billing_address2 = form.cleaned_data['billing_address2']
+                    m_billing_zip = form.cleaned_data['billing_zip']
+                    m_first_name = form.cleaned_data['first_name']
+                    m_last_name = form.cleaned_data['last_name']
+                    m_payment_method = form.cleaned_data['payment_method']
+                    try:
+                        user = request.user
+                        logger.info(f"{timestamp}: proceesing New Billing Address info of User {userprofile.user.username}")
+                        if user.first_name and user.last_name:
+                            address = BillingAddress(
+                                        user = userprofile,
+                                        street_address=m_billing_address,
+                                        apartment_address=m_billing_address2,
+                                        zip=m_billing_zip)
                             address.save()
 
-                        order.billing_address = address
-                        order.payment_method = m_payment_method
-                        order.save()
-                    else:
-                        user.first_name = m_first_name
-                        user.save()
-                        user.last_name = m_last_name
-                        user.save()
+                            # Setting default billing address
+                            set_default_billing = form.cleaned_data.get(
+                                    'set_default_billing'
+                                )
 
-                        address = BillingAddress(
-                                    user = userprofile,
-                                    street_address=m_billing_address,
-                                    apartment_address=m_billing_address2,
-                                    zip=m_billing_zip)
-                        address.save()
+                            if set_default_billing:
+                                address.default = True
+                                address.save()
 
-                        # Setting default billing address
-                        set_default_billing = form.cleaned_data.get(
-                                'set_default_billing')
+                            order.billing_address = address
+                            order.payment_method = m_payment_method
+                            order.save()
+                            logger.info(f"{timestamp}: New Billing Address of User {userprofile.user.username} Saved Successfully")
+                        else:
+                            logger.info(f"{timestamp}: Adding the First and Last Name of User {userprofile.user.username}")
+                            logger.info(f"{timestamp}: First Name: {user.first_name} || Last Name: {user.last_name}")
+                            user.first_name = m_first_name
+                            user.save()
+                            user.last_name = m_last_name
+                            user.save()
 
-                        if set_default_billing:
-                            address.default = True
+                            address = BillingAddress(
+                                        user = userprofile,
+                                        street_address=m_billing_address,
+                                        apartment_address=m_billing_address2,
+                                        zip=m_billing_zip)
                             address.save()
-                        
-                        order.billing_address = address
-                        order.payment_method = m_payment_method
-                        order.save()
+                            logger.info(f"{timestamp}: New Billing Address of User {userprofile.user.username} Saved Successfully")
 
-                    messages.success(request,"Billing address saved succesfully. Complete payment!")
-                    return redirect('/payments/payment/'+order.reference_code+'/')
+                            # Setting default billing address
+                            logger.info(f"Setting Default Billing Address")
+                            set_default_billing = form.cleaned_data.get(
+                                    'set_default_billing')
 
+                            if set_default_billing:
+                                address.default = True
+                                address.save()
+                            
+                            order.billing_address = address
+                            order.payment_method = m_payment_method
+                            order.save()
+
+                        messages.success(request,"Billing address saved succesfully. Complete payment!")
+                        return redirect('/payments/payment/'+order.reference_code+'/')
+
+                    except Exception as e:
+                        messages.warning(request,"Please enter all the required fields")
+                        print(e)
+                        return redirect("payments:checkuot-view")
                 except Exception as e:
-                    messages.warning(request,"Please enter all the required fields")
-                    print(e)
-                    return redirect("payments:checkuot-view")
+                    logger.exception(f"{timestamp}: Exception {e}")
+                    logger.error(f"{timestamp}: Error setting New Billing Address for user {userprofile}")
         else:
             messages.warning(request,"Plese complete all the required fields")
             print("exception occured or something")
@@ -154,5 +200,4 @@ def checkout_view(request):
         context.update({
             'form':form
         })
-
     return render(request, "payments/checkout.html",context)

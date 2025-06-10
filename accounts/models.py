@@ -12,6 +12,14 @@ STATUS_CHOICES = (
     # When an account is IC it will still be displayed on the Onsale panel of the seller
 )
 
+PLATFORM_TYPES = (
+    ('FR', 'Freelancing'),
+    ('IG', 'Instagram'),
+    ('TK', 'Tiktok'),
+    ('YT', 'Youtube'),
+    ('TT', 'X')
+)
+
 class SecurityStep(models.Model):
     title = models.CharField( max_length=50)
     step_number = models.IntegerField()
@@ -47,6 +55,7 @@ class Account(models.Model):
     # How to set an arlam in python, or a timer
     date_removed_from_market = models.DateTimeField(auto_now_add=False,blank=True,null=True)
     platform = models.CharField(blank=True,null=True, max_length=50)
+    platform_type = models.CharField(choices=PLATFORM_TYPES,max_length=2)
     url = models.URLField(blank=True,null=True, max_length=200)
     title = models.CharField(blank=True,null=True, max_length=50)
     thumb_nail = models.FileField(blank=True,null=True)
@@ -107,7 +116,7 @@ class Account(models.Model):
 
     def get_final_price(self):
         if self.discount_price:
-            return discount_price
+            return self.discount_price
         else:
             return self.selling_price
         
