@@ -1,0 +1,4 @@
+# Force LF line endings for shell scripts on all platforms
+*.sh text eol=lf
+.python-version text eol=lf
+build.sh text eol=lf
