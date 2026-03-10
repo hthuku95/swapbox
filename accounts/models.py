@@ -2,6 +2,7 @@ from django.db import models
 from profiles.models import UserProfile
 from chat.models import Chat
 from django.shortcuts import reverse
+from .encryption import EncryptedCharField
 # Create your models here.
 
 STATUS_CHOICES = (
@@ -55,7 +56,7 @@ class Account(models.Model):
     # How to set an arlam in python, or a timer
     date_removed_from_market = models.DateTimeField(auto_now_add=False,blank=True,null=True)
     platform = models.CharField(blank=True,null=True, max_length=50)
-    platform_type = models.CharField(choices=PLATFORM_TYPES,max_length=2)
+    platform_type = models.CharField(choices=PLATFORM_TYPES,max_length=2,blank=True,null=True)
     url = models.URLField(blank=True,null=True, max_length=200)
     title = models.CharField(blank=True,null=True, max_length=50)
     thumb_nail = models.FileField(blank=True,null=True)
@@ -148,17 +149,28 @@ class Account(models.Model):
         })
 
 class Credential(models.Model):
+    """
+    Stores login credentials for a marketplace Account.
+
+    All password and email fields are encrypted at rest using Fernet
+    symmetric encryption (AES-128-CBC + HMAC-SHA256).  The encryption
+    key is CREDENTIAL_ENCRYPTION_KEY in settings / .env.
+
+    allowed_viewers controls which UserProfiles can see the decrypted values.
+    """
     account = models.ForeignKey(Account, on_delete=models.CASCADE)
-    login_email = models.CharField(blank=True,null=True, max_length=512)
-    login_username = models.CharField(blank=True,null=True, max_length=512)
-    login_email_password = models.CharField(blank=True,null=True, max_length=512)
-    recovery_email = models.CharField(blank=True,null=True, max_length=512)
-    recovery_email_password = models.CharField(blank=True,null=True, max_length=512)
-    # For Google allauth accounts
-    login_gmail = models.CharField(blank=True,null=True, max_length=512)
-    login_gmail_password = models.CharField(blank=True,null=True, max_length=512)
-    recovery_gmail = models.CharField(blank=True,null=True, max_length=512)
-    recovery_gmail_password = models.CharField(blank=True,null=True, max_length=50)
+    # Non-sensitive identifiers — stored as plain text
+    login_username = models.CharField(blank=True, null=True, max_length=512)
+    # Sensitive fields — encrypted at rest
+    login_email             = EncryptedCharField(blank=True, null=True)
+    login_email_password    = EncryptedCharField(blank=True, null=True)
+    recovery_email          = EncryptedCharField(blank=True, null=True)
+    recovery_email_password = EncryptedCharField(blank=True, null=True)
+    # Google / Gmail fields
+    login_gmail             = EncryptedCharField(blank=True, null=True)
+    login_gmail_password    = EncryptedCharField(blank=True, null=True)
+    recovery_gmail          = EncryptedCharField(blank=True, null=True)
+    recovery_gmail_password = EncryptedCharField(blank=True, null=True)
     allowed_viewers = models.ManyToManyField(UserProfile, blank=True)
 
     def __str__(self):

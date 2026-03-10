@@ -2,6 +2,23 @@
 
 from pathlib import Path
 import os
+import dj_database_url
+
+# Load .env file in development (no-op if not present or python-dotenv unavailable)
+try:
+    from dotenv import load_dotenv
+    _env_path = Path(__file__).resolve().parent.parent / '.env'
+    load_dotenv(_env_path)
+except ImportError:
+    # Fallback: manually parse a simple KEY=VALUE .env file
+    _env_path = Path(__file__).resolve().parent.parent / '.env'
+    if _env_path.exists():
+        for _line in _env_path.read_text().splitlines():
+            _line = _line.strip()
+            if _line and not _line.startswith('#') and '=' in _line:
+                _k, _, _v = _line.partition('=')
+                os.environ.setdefault(_k.strip(), _v.strip())
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -9,13 +26,21 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-bqpvo8+e198@u557m3g)5+g^gv9fl3y1w_fth6e7$yl$sod1rj'
+# Secret key — read from env in production, fallback for local dev only
+SECRET_KEY = os.environ.get(
+    'SECRET_KEY',
+    'django-insecure-bqpvo8+e198@u557m3g)5+g^gv9fl3y1w_fth6e7$yl$sod1rj'
+)
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# DEBUG stays True for now (building/testing phase).
+# On Render, set DEBUG=False when ready for production.
+DEBUG = os.environ.get('DEBUG', 'True') != 'False'
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+# Render automatically sets RENDER_EXTERNAL_HOSTNAME to the .onrender.com URL
+RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
 
 # Application definition
@@ -35,6 +60,7 @@ INSTALLED_APPS = [
     'payments',
     'notifications',
     'accounts',
+    'voltage_payments',
 
     # allauth
     'allauth',
@@ -43,6 +69,8 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'allauth.account.middleware.AccountMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware', 
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -76,12 +104,23 @@ WSGI_APPLICATION = 'swapbox.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+if os.environ.get('DATABASE_URL'):
+    # Production database (Railway PostgreSQL)
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=os.environ.get('DATABASE_URL'),
+            conn_max_age=1800,
+            conn_health_checks=True,
+        )
     }
-}
+else:
+    # Development database (SQLite)
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation
@@ -125,6 +164,9 @@ STATICFILES_DIRS = (
     os.path.join(BASE_DIR,'static'),
 )
 
+# Static files compression for production
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
 MEDIA_URL = '/media/'
 
 MEDIA_ROOT = os.path.join(BASE_DIR,'media')
@@ -132,10 +174,99 @@ MEDIA_ROOT = os.path.join(BASE_DIR,'media')
 SITE_ID = 1
 # This will be changed to the first form page for adding Profile Details if profile_creation_complete == False
 LOGIN_REDIRECT_URL = "/dashboard/"
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+if DEBUG:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+else:
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
+    EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
+    EMAIL_USE_TLS = True
+    EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+    EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+    DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@swapbox.com')
+
 ACCOUNT_EMAIL_VERIFICATION = "none"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Voltage.cloud Configuration
+VOLTAGE_API_KEY = os.environ.get('SWAPBOX_VOLTAGE_API_KEY', '')
+VOLTAGE_ORGANIZATION_ID = os.environ.get('VOLTAGE_ORGANIZATION_ID', '')
+VOLTAGE_WEBHOOK_SECRET = os.environ.get('VOLTAGE_WEBHOOK_SECRET', '')
+
+if DEBUG:
+    VOLTAGE_ENVIRONMENT_ID = os.environ.get('VOLTAGE_STAGING_ENVIRONMENT_ID', '')
+    VOLTAGE_WALLET_ID = os.environ.get('SWAPBOX_STAGING_WALLET_ID', '')
+    VOLTAGE_NETWORK = 'mutinynet'
+else:
+    VOLTAGE_ENVIRONMENT_ID = os.environ.get('VOLTAGE_PRODUCTION_ENVIRONMENT_ID', '')
+    VOLTAGE_WALLET_ID = os.environ.get('SWAPBOX_PRODUCTION_WALLET_ID', '')
+    VOLTAGE_NETWORK = 'mainnet'
+
+# Credential field encryption key (Fernet — generate with: python manage.py generate_encryption_key)
+CREDENTIAL_ENCRYPTION_KEY = os.environ.get('CREDENTIAL_ENCRYPTION_KEY', '')
+
+# Logging configuration
+# On Render (and other cloud hosts) we only use the console handler — the
+# filesystem is ephemeral so file logs would be lost on every restart.
+_log_handlers = ['console']
+if DEBUG and not os.environ.get('RENDER'):
+    _log_handlers = ['file', 'console']
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'django.log'),
+            'formatter': 'verbose',
+        },
+        'console': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': _log_handlers,
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'voltage_payments': {
+            'handlers': _log_handlers,
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'payments': {
+            'handlers': _log_handlers,
+            'level': 'INFO',
+            'propagate': True,
+        },
+    },
+}
+
+# Security settings for production
+if not DEBUG:
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    X_FRAME_OPTIONS = 'DENY'
+    SECURE_HSTS_SECONDS = 86400
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True

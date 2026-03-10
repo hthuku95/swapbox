@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from .models import Payment, Order, BillingAddress
 from shop.models import Cart
@@ -59,7 +59,7 @@ def checkout_view(request):
     if request.method == 'POST':
         # Fetching Form
         try:
-            logger.info(f"{timestamp}Checking validity of data from checkout form of user{userprofile.user.username}")
+            logger.info(f"{timestamp} Checking validity of data from checkout form of user{userprofile.user.username}")
             form =CheckoutForm(request.POST)
         except:
             logger.exception(f"{timestamp}: Exception: {e}")
@@ -78,13 +78,22 @@ def checkout_view(request):
                     order = Order(
                         reference_code = generate_reference_code(),
                         cart = cart,
-                        value = cart.get_total_price_of_accounts_to_be_purchased()
+                        value = cart.get_total_price_of_accounts_to_be_purchased(),
                         order_type = 'AP'
                     )
                     order.save()
             except Exception as e:
                 logger.exception(f"{timestamp}: Exception: {e}")
                 logger.error(f"{timestamp}: Error Fetching/creating order {order} of User {userprofile}")
+            
+            payment_method = form.cleaned_data['payment_method']
+            
+            # Handle Bitcoin payment
+            if payment_method == 'BTC':
+                order.payment_method = payment_method
+                order.save()
+                messages.info(request, "Redirecting to Bitcoin payment...")
+                return redirect('voltage_payments:create_payment', order_id=order.id)
 
             # Using Default Biing Address
             try:
@@ -106,10 +115,10 @@ def checkout_view(request):
                     if address_qs.exists():
                         billing_address = address_qs[0]
                         order.billing_address = billing_address
+                        order.payment_method = payment_method
                         order.save()
 
                         messages.success(request,"Using default billing address")
-                        # how to add slug field to this
                         return redirect('/payments/payment/'+order.reference_code+'/')
                 except Exception as e:
                     logger.exception(f"{timestamp}: Exception: {e}")
@@ -117,7 +126,7 @@ def checkout_view(request):
 
                 else:
                     messages.warning(request,"You dont have a default billing address")
-                    return redirect("payments:checkuot-view")
+                    return redirect("payments:checkout-view")
             else:
                 # User is entering a new billing Address
                 try:
@@ -127,7 +136,6 @@ def checkout_view(request):
                     m_billing_zip = form.cleaned_data['billing_zip']
                     m_first_name = form.cleaned_data['first_name']
                     m_last_name = form.cleaned_data['last_name']
-                    m_payment_method = form.cleaned_data['payment_method']
                     try:
                         user = request.user
                         logger.info(f"{timestamp}: proceesing New Billing Address info of User {userprofile.user.username}")
@@ -149,7 +157,7 @@ def checkout_view(request):
                                 address.save()
 
                             order.billing_address = address
-                            order.payment_method = m_payment_method
+                            order.payment_method = payment_method
                             order.save()
                             logger.info(f"{timestamp}: New Billing Address of User {userprofile.user.username} Saved Successfully")
                         else:
@@ -178,7 +186,7 @@ def checkout_view(request):
                                 address.save()
                             
                             order.billing_address = address
-                            order.payment_method = m_payment_method
+                            order.payment_method = payment_method
                             order.save()
 
                         messages.success(request,"Billing address saved succesfully. Complete payment!")
@@ -187,14 +195,14 @@ def checkout_view(request):
                     except Exception as e:
                         messages.warning(request,"Please enter all the required fields")
                         print(e)
-                        return redirect("payments:checkuot-view")
+                        return redirect("payments:checkout-view")
                 except Exception as e:
                     logger.exception(f"{timestamp}: Exception {e}")
                     logger.error(f"{timestamp}: Error setting New Billing Address for user {userprofile}")
         else:
             messages.warning(request,"Plese complete all the required fields")
             print("exception occured or something")
-            return redirect("payments:checkuot-view")
+            return redirect("payments:checkout-view")
     else:
         form = CheckoutForm()
         context.update({

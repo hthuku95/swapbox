@@ -1,0 +1,25 @@
+# Core Django
+Django>=4.0,<5.0
+django-allauth>=0.50.0
+
+# Database
+psycopg2-binary>=2.9.0
+dj-database-url>=1.0.0
+
+# Production server
+gunicorn>=20.1.0
+whitenoise>=6.2.0
+
+# Voltage.cloud integration & encryption
+requests>=2.28.0
+cryptography>=3.4.8
+
+# Utilities
+Pillow>=9.0.0
+python-decouple>=3.6
+
+# Development (optional)
+django-debug-toolbar>=3.2.0
+
+# Email (if using SMTP in production)
+django-extensions>=3.1.0

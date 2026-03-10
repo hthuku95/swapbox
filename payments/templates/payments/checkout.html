@@ -1,59 +1,258 @@
-{% extends base.html %}
+{% extends 'base.html' %}
 {% load static %}
 
+{% block title %}Checkout | Swapbox{% endblock %}
+
 {% block content %}
-    <h2 class="major"> Checkout Form</h2>
-    <p>Enter your Billing Address</p>
-    <form method="post" action="/payments/checkout/{{payment_order.reference_code}}/">
-        <div class="row gtr-uniform">
-            {%csrf_token%}
-            <div class="col-6 col-12-xsmall">
-                <label for="first_name">First name</label>
-                <input type="text" name="first_name" id="first_name" value="{{user.first_name}}"/>
-            </div>
-            <div class="col-6 col-12-xsmall">
-                <label for="last_name">Last name</label>
-                <input type="text" name="last_name" id="last_name" value="{{user.last_name}}"/>
-            </div>
-            <div class="col-12">
-                <label for="billing_address">Address</label>
-                <input type="text" id="billing_address" name="billing_address" placeholder="Street Address">
-            </div>
-            <div class="col-12">
-                <label for="billing_address2">Address 2 (Optional)</label>
-                <input type="text" id="billing_address2" name="billing_address2" placeholder="Apartment or suite">
-            </div>
-            <div class="col-6 col-12-xsmall">
-                <label for="billing_zip">Zip code</label>
-                <input type="text" name="billing_zip" id="billing_zip" placeholder="Billing Zip"/>
-            </div>
-
-            <div class="col-12">
-                <input type="checkbox" id="set_default_billing" name="set_default_billing">
-                <label for="set_default_billing">Save as default billing address</label>
-            </div>
-
-            {% if default_billing_address %}
-            <div class="col-12">
-                <input type="checkbox" id="use_default_billing" name="use_default_billing">
-                <label for="use_default_billing">Use default billing address: {{ default_billing_address.street_address|truncatechars:10 }}</label>
-            </div>
-            {% endif %}
-            <!--Add Paymet Methods Radiio buttons here-->
-            <div class="d-block my-3">
-                {% for value, name in form.fields.payment_method.choices %}
-                <div class="custom-control custom-radio">
-                  <input id="{{ name }}" name="payment_option" value="{{ value }}" type="radio" class="custom-control-input" required>
-                  <label class="custom-control-label" for="{{ name }}">{{ name }}</label>
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0">Checkout</h3>
                 </div>
-                {% endfor %}
-            </div>
+                <div class="card-body">
+                    <form method="post" action="{% url 'payments:checkout-view' %}">
+                        {% csrf_token %}
+                        
+                        <!-- Payment Method Selection -->
+                        <div class="form-group">
+                            <h5>Payment Method</h5>
+                            <div class="payment-methods">
+                                {% for value, name in form.fields.payment_method.choices %}
+                                <div class="custom-control custom-radio mb-3">
+                                    <input 
+                                        id="payment_{{ value }}" 
+                                        name="payment_method" 
+                                        value="{{ value }}" 
+                                        type="radio" 
+                                        class="custom-control-input payment-method-radio" 
+                                        required
+                                        {% if value == 'BTC' %}onchange="toggleBillingFields()"{% endif %}
+                                    >
+                                    <label class="custom-control-label" for="payment_{{ value }}">
+                                        {% if value == 'BTC' %}
+                                            <i class="fab fa-bitcoin text-warning mr-2"></i>
+                                            <strong>{{ name }}</strong>
+                                            <small class="text-muted d-block">Pay with Bitcoin - Fast, secure, and private</small>
+                                        {% elif value == 'PC' %}
+                                            <i class="fas fa-credit-card text-primary mr-2"></i>
+                                            <strong>{{ name }}</strong>
+                                        {% elif value == 'W' %}
+                                            <i class="fas fa-wallet text-success mr-2"></i>
+                                            <strong>{{ name }}</strong>
+                                        {% endif %}
+                                    </label>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
 
-            <div class="col-12">
-                <ul class="actions">
-                    <li><input type="submit" value="Submit" class="primary" /></li>
-                </ul>
+                        <!-- Billing Information (Hidden for Bitcoin) -->
+                        <div id="billing-section">
+                            <h5>Billing Information</h5>
+                            
+                            {% if default_billing_address %}
+                            <div class="form-group">
+                                <div class="custom-control custom-checkbox">
+                                    <input type="checkbox" id="use_default_billing" name="use_default_billing" class="custom-control-input">
+                                    <label class="custom-control-label" for="use_default_billing">
+                                        Use default billing address: {{ default_billing_address.street_address|truncatechars:30 }}
+                                    </label>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            <div id="billing-fields">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="first_name">First Name</label>
+                                            {{ form.first_name }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="last_name">Last Name</label>
+                                            {{ form.last_name }}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="billing_address">Address</label>
+                                    {{ form.billing_address }}
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="billing_address2">Address 2 (Optional)</label>
+                                    {{ form.billing_address2 }}
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="billing_zip">Zip Code</label>
+                                    {{ form.billing_zip }}
+                                </div>
+                                
+                                <div class="form-group">
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" id="set_default_billing" name="set_default_billing" class="custom-control-input">
+                                        <label class="custom-control-label" for="set_default_billing">
+                                            Save as default billing address
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Bitcoin Payment Info -->
+                        <div id="bitcoin-info" class="alert alert-info" style="display: none;">
+                            <h6><i class="fab fa-bitcoin mr-2"></i>Bitcoin Payment Information</h6>
+                            <ul class="mb-0">
+                                <li>You will be redirected to a secure Bitcoin payment page</li>
+                                <li>Payment must be completed within 15 minutes</li>
+                                <li>Your accounts will be transferred automatically after confirmation</li>
+                                <li>No billing address required for Bitcoin payments</li>
+                            </ul>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary btn-lg btn-block">
+                                <span id="submit-text">Continue to Payment</span>
+                                <i class="fas fa-arrow-right ml-2"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
-    </form>
-{% endblock content %}
+
+        <!-- Order Summary -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Order Summary</h5>
+                </div>
+                <div class="card-body">
+                    {% if cart.accounts_to_be_purchased.all %}
+                        {% for account in cart.accounts_to_be_purchased.all %}
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div>
+                                <strong>{{ account.title }}</strong>
+                                <br>
+                                <small class="text-muted">{{ account.get_platform_type_display }}</small>
+                            </div>
+                            <div class="text-right">
+                                <strong>${{ account.selling_price }}</strong>
+                            </div>
+                        </div>
+                        {% if not forloop.last %}<hr class="my-2">{% endif %}
+                        {% endfor %}
+                        
+                        <hr>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <strong>Total:</strong>
+                            <strong class="text-primary">${{ cart.get_total_price_of_accounts_to_be_purchased }}</strong>
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No items in cart</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Security Notice -->
+            <div class="card mt-3">
+                <div class="card-body">
+                    <h6><i class="fas fa-shield-alt mr-2 text-success"></i>Secure Payment</h6>
+                    <small class="text-muted">
+                        All payments are processed securely. Your account information will be transferred immediately after payment confirmation.
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleBillingFields() {
+    const bitcoinRadio = document.getElementById('payment_BTC');
+    const billingSection = document.getElementById('billing-section');
+    const bitcoinInfo = document.getElementById('bitcoin-info');
+    const submitText = document.getElementById('submit-text');
+    
+    if (bitcoinRadio && bitcoinRadio.checked) {
+        billingSection.style.display = 'none';
+        bitcoinInfo.style.display = 'block';
+        submitText.textContent = 'Pay with Bitcoin';
+    } else {
+        billingSection.style.display = 'block';
+        bitcoinInfo.style.display = 'none';
+        submitText.textContent = 'Continue to Payment';
+    }
+}
+
+// Add event listeners to all payment method radios
+document.addEventListener('DOMContentLoaded', function() {
+    const paymentRadios = document.querySelectorAll('.payment-method-radio');
+    paymentRadios.forEach(radio => {
+        radio.addEventListener('change', toggleBillingFields);
+    });
+    
+    // Check initial state
+    toggleBillingFields();
+});
+
+// Handle default billing address checkbox
+document.getElementById('use_default_billing')?.addEventListener('change', function() {
+    const billingFields = document.getElementById('billing-fields');
+    if (this.checked) {
+        billingFields.style.display = 'none';
+    } else {
+        billingFields.style.display = 'block';
+    }
+});
+</script>
+
+<style>
+.payment-methods .custom-control {
+    padding: 1rem;
+    border: 2px solid #e9ecef;
+    border-radius: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.payment-methods .custom-control:hover {
+    border-color: #007bff;
+    background-color: #f8f9fa;
+}
+
+.payment-methods .custom-control-input:checked ~ .custom-control-label {
+    font-weight: bold;
+}
+
+.payment-methods .custom-control-input:checked {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+.payment-methods .custom-radio.mb-3 {
+    margin-bottom: 0.5rem !important;
+}
+
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.btn-primary {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+    border-color: #004085;
+}
+</style>
+{% endblock %}

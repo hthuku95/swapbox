@@ -11,7 +11,8 @@ ORDER_TYPE_CHOICES = (
 
 PAYMENT_METHOD_CHOICES = (
     ('PC','Paypal or Card'),
-    ('W','Wallet')
+    ('W','Wallet'),
+    ('BTC','Bitcoin')
 )
 
 class BillingAddress(models.Model):
@@ -29,7 +30,7 @@ class Order(models.Model):
     cart = models.ForeignKey(Cart, on_delete=models.SET_NULL,blank=True,null=True)
     value = models.FloatField(default=0.0)
     billing_address = models.ForeignKey(BillingAddress, blank=True,null=True, on_delete=models.SET_NULL)
-    payment_method = models.CharField(choices=PAYMENT_METHOD_CHOICES,blank=True,null=True, max_length=2)
+    payment_method = models.CharField(choices=PAYMENT_METHOD_CHOICES,blank=True,null=True, max_length=3)
     payment_complete = models.BooleanField(default=False)
     order_type = models.CharField(choices=ORDER_TYPE_CHOICES, max_length=2,blank=True,null=True)
 

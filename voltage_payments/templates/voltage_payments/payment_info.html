@@ -1,0 +1,243 @@
+{% extends "base.html" %}
+{% block title %}Bitcoin Payment — Swapbox{% endblock %}
+
+{% block content %}
+<div class="container py-4" id="payment-page"
+     data-payment-id="{{ payment.id }}"
+     data-status-url="{% url 'voltage_payments:status_api' payment.id %}"
+     data-dashboard-url="{% url 'profiles:dashboard' %}">
+
+  <!-- Network badge -->
+  {% if is_testnet %}
+  <div class="alert alert-warning text-center mb-3">
+    <strong>Testnet / Mutinynet</strong> — No real Bitcoin involved.
+  </div>
+  {% endif %}
+
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+
+      <!-- Status card -->
+      <div class="card shadow-sm mb-4" id="status-card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">Bitcoin Payment</h5>
+          <span class="badge bg-{{ payment.get_status_badge_class }} fs-6" id="status-badge">
+            {{ payment.get_status_display }}
+          </span>
+        </div>
+        <div class="card-body">
+
+          <!-- Amounts -->
+          <div class="text-center mb-3">
+            <div class="fs-3 fw-bold">${{ payment.amount_usd }}</div>
+            <div class="text-muted" id="sats-display">
+              {{ payment.amount_sats|floatformat:"0" }} sats
+            </div>
+            {% if payment.btc_price_at_creation %}
+            <small class="text-muted">
+              BTC price at creation: ${{ payment.btc_price_at_creation|floatformat:"0" }}
+            </small>
+            {% endif %}
+          </div>
+
+          <!-- Countdown timer -->
+          {% if payment.expires_at and payment.status == 'receiving' %}
+          <div class="text-center mb-3">
+            <small class="text-muted">Expires in</small>
+            <div class="fs-5 fw-bold text-warning" id="countdown">--:--</div>
+          </div>
+          {% endif %}
+
+          <!-- QR Code -->
+          {% if payment.status == 'generating' %}
+          <div class="text-center py-4" id="generating-section">
+            <div class="spinner-border text-warning" role="status"></div>
+            <p class="mt-2 text-muted">Generating payment address…</p>
+          </div>
+          {% elif payment.status in 'receiving expired failed' %}
+          <div id="payment-details-section">
+            {% if payment.get_primary_payment_string %}
+            <div class="text-center mb-3" id="qr-container">
+              <canvas id="qr-canvas"></canvas>
+              <div class="mt-2">
+                <small class="text-muted">Scan with any Bitcoin wallet</small>
+              </div>
+            </div>
+            {% endif %}
+
+            <!-- BIP21 / Lightning / On-chain details -->
+            {% if payment.lightning_invoice %}
+            <div class="mb-3">
+              <label class="form-label fw-bold">Lightning Invoice (BOLT11)</label>
+              <div class="input-group">
+                <input type="text" class="form-control form-control-sm font-monospace"
+                       id="lightning-invoice"
+                       value="{{ payment.lightning_invoice }}" readonly>
+                <button class="btn btn-outline-secondary btn-sm"
+                        onclick="copyField('lightning-invoice')">Copy</button>
+              </div>
+            </div>
+            {% endif %}
+
+            {% if payment.btc_address %}
+            <div class="mb-3">
+              <label class="form-label fw-bold">On-chain Bitcoin Address</label>
+              <div class="input-group">
+                <input type="text" class="form-control form-control-sm font-monospace"
+                       id="btc-address"
+                       value="{{ payment.btc_address }}" readonly>
+                <button class="btn btn-outline-secondary btn-sm"
+                        onclick="copyField('btc-address')">Copy</button>
+              </div>
+            </div>
+            {% endif %}
+          </div>
+
+          {% elif payment.status == 'completed' %}
+          <div class="alert alert-success text-center" id="success-section">
+            <i class="bi bi-check-circle-fill fs-1"></i>
+            <h5 class="mt-2">Payment Received!</h5>
+            <p class="mb-0">Your accounts have been transferred to your dashboard.</p>
+          </div>
+          {% endif %}
+
+        </div><!-- /.card-body -->
+
+        <!-- Actions -->
+        <div class="card-footer d-flex gap-2 justify-content-center flex-wrap">
+          {% if payment.status == 'completed' %}
+            <a href="{% url 'profiles:dashboard' %}" class="btn btn-success">Go to Dashboard</a>
+            <a href="{% url 'shop:market' %}" class="btn btn-outline-secondary">Continue Shopping</a>
+          {% elif payment.status in 'expired failed' %}
+            <a href="{% url 'payments:checkout-view' %}" class="btn btn-warning">Try Again</a>
+            <a href="{% url 'profiles:dashboard' %}" class="btn btn-outline-secondary">Dashboard</a>
+          {% else %}
+            <a href="{% url 'profiles:dashboard' %}" class="btn btn-outline-secondary">Dashboard</a>
+          {% endif %}
+        </div>
+
+      </div><!-- /.card -->
+
+      <!-- Order summary -->
+      <div class="card shadow-sm">
+        <div class="card-header"><h6 class="mb-0">Order Summary</h6></div>
+        <div class="card-body p-0">
+          <table class="table table-sm mb-0">
+            <thead>
+              <tr><th>#</th><th>Account</th><th class="text-end">Price</th></tr>
+            </thead>
+            <tbody>
+              {% for account in order.cart.accounts_to_be_purchased.all %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ account.title }}</td>
+                <td class="text-end">${{ account.get_final_price }}</td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="3" class="text-center text-muted">—</td></tr>
+              {% endfor %}
+            </tbody>
+            <tfoot>
+              <tr class="fw-bold">
+                <td colspan="2">Total</td>
+                <td class="text-end">${{ payment.amount_usd }}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+
+    </div><!-- /.col -->
+  </div><!-- /.row -->
+</div><!-- /.container -->
+{% endblock %}
+
+{% block extra_js %}
+<!-- qrcode.js CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  const page        = document.getElementById('payment-page');
+  const paymentId   = page.dataset.paymentId;
+  const statusUrl   = page.dataset.statusUrl;
+  const dashUrl     = page.dataset.dashboardUrl;
+
+  // ------------------------------------------------------------------
+  // QR code
+  // ------------------------------------------------------------------
+  const qrCanvas = document.getElementById('qr-canvas');
+  {% if payment.get_primary_payment_string and payment.status == 'receiving' %}
+  if (qrCanvas) {
+    new QRCode(qrCanvas, {
+      text:   '{{ payment.get_primary_payment_string|escapejs }}',
+      width:  220,
+      height: 220,
+      colorDark:  '#000',
+      colorLight: '#fff',
+      correctLevel: QRCode.CorrectLevel.M,
+    });
+  }
+  {% endif %}
+
+  // ------------------------------------------------------------------
+  // Countdown timer
+  // ------------------------------------------------------------------
+  const countdownEl = document.getElementById('countdown');
+  {% if payment.expires_at %}
+  const expiresAt = new Date('{{ payment.expires_at|date:"c" }}');
+  function updateCountdown() {
+    const diff = Math.max(0, Math.floor((expiresAt - Date.now()) / 1000));
+    const m = String(Math.floor(diff / 60)).padStart(2, '0');
+    const s = String(diff % 60).padStart(2, '0');
+    if (countdownEl) countdownEl.textContent = `${m}:${s}`;
+  }
+  setInterval(updateCountdown, 1000);
+  updateCountdown();
+  {% endif %}
+
+  // ------------------------------------------------------------------
+  // Copy helper
+  // ------------------------------------------------------------------
+  window.copyField = function (fieldId) {
+    const el = document.getElementById(fieldId);
+    if (!el) return;
+    navigator.clipboard.writeText(el.value).then(() => {
+      const btn = el.nextElementSibling;
+      if (btn) { btn.textContent = 'Copied!'; setTimeout(() => btn.textContent = 'Copy', 2000); }
+    });
+  };
+
+  // ------------------------------------------------------------------
+  // Status polling (every 10 s while pending)
+  // ------------------------------------------------------------------
+  {% if payment.status in 'generating receiving' %}
+  let pollInterval = setInterval(poll, 10000);
+
+  function poll() {
+    fetch(statusUrl)
+      .then(r => r.json())
+      .then(data => {
+        // Update status badge
+        const badge = document.getElementById('status-badge');
+        if (badge) badge.textContent = data.status_display;
+
+        if (data.status === 'completed') {
+          clearInterval(pollInterval);
+          // Replace the whole page content gracefully
+          window.location.reload();
+        } else if (data.status === 'expired' || data.status === 'failed') {
+          clearInterval(pollInterval);
+          window.location.reload();
+        } else if (data.status === 'receiving' && data.bip21_uri) {
+          // Payment was still generating — now it has an address; reload
+          window.location.reload();
+        }
+      })
+      .catch(err => console.warn('Status poll error:', err));
+  }
+  {% endif %}
+})();
+</script>
+{% endblock %}

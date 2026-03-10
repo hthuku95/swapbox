@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Bitcoin Payment History — Swapbox{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <h2 class="mb-4">Bitcoin Payment History</h2>
+
+  {% if payments %}
+  <div class="table-responsive">
+    <table class="table table-hover align-middle">
+      <thead class="table-dark">
+        <tr>
+          <th>Payment ID</th>
+          <th>Order</th>
+          <th>Amount (USD)</th>
+          <th>Amount (sats)</th>
+          <th>Kind</th>
+          <th>Network</th>
+          <th>Status</th>
+          <th>Created</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in payments %}
+        <tr>
+          <td class="font-monospace text-muted small">{{ p.id|stringformat:"s"|slice:":8" }}…</td>
+          <td>
+            {% if p.order %}
+            <a href="{% url 'payments:payment-details' p.order.reference_code %}">
+              {{ p.order.reference_code }}
+            </a>
+            {% else %}—{% endif %}
+          </td>
+          <td>${{ p.amount_usd }}</td>
+          <td>{{ p.amount_sats|floatformat:"0" }}</td>
+          <td><span class="badge bg-secondary">{{ p.get_payment_kind_display }}</span></td>
+          <td>
+            {% if p.network == 'mutinynet' %}
+            <span class="badge bg-warning text-dark">Testnet</span>
+            {% else %}
+            <span class="badge bg-success">Mainnet</span>
+            {% endif %}
+          </td>
+          <td>
+            <span class="badge bg-{{ p.get_status_badge_class }}">{{ p.get_status_display }}</span>
+          </td>
+          <td class="text-muted small">{{ p.created_at|date:"d M Y H:i" }}</td>
+          <td>
+            {% if p.status in 'generating receiving' %}
+            <a href="{% url 'voltage_payments:payment_info' p.id %}" class="btn btn-sm btn-warning">
+              Continue
+            </a>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="alert alert-info">You have no Bitcoin payments yet.</div>
+  {% endif %}
+
+  <a href="{% url 'profiles:dashboard' %}" class="btn btn-outline-secondary mt-3">
+    Back to Dashboard
+  </a>
+</div>
+{% endblock %}

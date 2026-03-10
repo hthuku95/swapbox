@@ -1,3 +1,37 @@
-./env
+# Environment & secrets
 .env
-env
+env/
+venv/
+.venv/
+./env
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Django
+db.sqlite3
+db.sqlite3-journal
+*.log
+local_settings.py
+media/
+static_root/
+staticfiles/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Images uploaded for Claude (not part of the app)
+images_for_claude/
