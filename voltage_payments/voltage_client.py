@@ -16,6 +16,7 @@ import hmac
 import hashlib
 import base64
 import logging
+import uuid
 import requests
 from django.conf import settings
 
@@ -230,12 +231,13 @@ class VoltageClient:
         self._require_config()
         if events is None:
             events = [
-                {'type': 'receive', 'event': 'generated'},
-                {'type': 'receive', 'event': 'completed'},
-                {'type': 'receive', 'event': 'expired'},
-                {'type': 'receive', 'event': 'failed'},
+                {'receive': 'generated'},
+                {'receive': 'completed'},
+                {'receive': 'expired'},
+                {'receive': 'failed'},
             ]
         payload = {
+            'id': str(uuid.uuid4()),
             'organization_id': self._org_id,
             'environment_id': self._env_id,
             'url': webhook_url,
